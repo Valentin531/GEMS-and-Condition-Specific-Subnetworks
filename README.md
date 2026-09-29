@@ -26,6 +26,16 @@ Python/Snakemake workflow for building genome-scale metabolic models (GEMs) of 2
 
 ```mermaid
 flowchart TD
+
+subgraph P2[Part 2 – Condition-specific subnetworks]
+        J[Curated Core3 models] --> K[1 Media & biomass]
+        K --> L[2 Precursor producibility]
+        K --> M[3 Biomass production]
+        N[RNA-seq<br/>log2 TPM+1] --> O[4 RNA pre-analysis<br/>DGE, correlation, PCA]
+        N --> P[5 Discretization]
+        K & P --> Q[CORNETO iMAT<br/>λ = 0 and λ = 1]
+    end
+
     subgraph P1[Part 1 – GEM reconstruction]
         A[Genomes<br/>NCBI RefSeq / VMH] --> B[gapseq]
         A --> C[CarveMe]
@@ -39,14 +49,7 @@ flowchart TD
         G --> I[PCA_analysis/]
     end
 
-    subgraph P2[Part 2 – Condition-specific subnetworks]
-        J[Curated Core3 models] --> K[1 Media & biomass]
-        K --> L[2 Precursor producibility]
-        K --> M[3 Biomass production]
-        N[RNA-seq<br/>log2 TPM+1] --> O[4 RNA pre-analysis<br/>DGE, correlation, PCA]
-        N --> P[5 Discretization]
-        K & P --> Q[CORNETO iMAT<br/>λ = 0 and λ = 1]
-    end
+    
 ```
 
 ---
