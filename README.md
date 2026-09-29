@@ -8,7 +8,7 @@ Genome-scale metabolic models (GEMs) predict what a microbe can make and consume
 4. integrate transcriptomic data with **CORNETO iMAT** to build condition-specific subnetworks of *Bacteroides uniformis* and *Phocaeicola vulgatus* grown alone, in co-culture, and in the Com21 community.
 
 
-> Practical course, Zimmermann-Kogadeeva Group, EMBL Heidelberg (05.05.–18.08.2025)
+> Zimmermann-Kogadeeva Group, EMBL Heidelberg (05.05.–18.08.2025)
 > Author: Valentin Rebernig · Supervisor: Dr. Maria Zimmermann-Kogadeeva
 
 ---
@@ -17,12 +17,11 @@ Genome-scale metabolic models (GEMs) predict what a microbe can make and consume
 
 1. [Workflow overview](#workflow-overview)
 2. [Repository structure](#repository-structure)
-3. [Requirements](#requirements)
-4. [Input data](#input-data)
-5. [Part 1 – GEM reconstruction and supermodels](#part-1--gem-reconstruction-and-supermodels)
-6. [Part 2 – Condition-specific subnetworks](#part-2--condition-specific-subnetworks)
-7. [Known issues and manual interventions](#known-issues-and-manual-interventions)
-8. [References](#references)
+3. [Input data](#input-data)
+4. [Part 1 – GEM reconstruction and supermodels](#part-1--gem-reconstruction-and-supermodels)
+5. [Part 2 – Condition-specific subnetworks](#part-2--condition-specific-subnetworks)
+6. [Known issues and manual interventions](#known-issues-and-manual-interventions)
+7. [References](#references)
 
 ---
 
@@ -140,13 +139,13 @@ snakemake -s Snakefile_carveme_NoGap_fill
 KBase models are built manually in a Narrative with three apps: **Batch Create Assembly Set** (v1.2.0), then **Annotate Multiple Microbial Assemblies with RASTtk** (v1.073), then **MS2 – Build Prokaryotic Metabolic Models** (OMEGGA). KBase adds artificial metabolites, which are removed after download:
 
 ```bash
-python Kbase_Cleaner.py   # TODO: input/output arguments
+python Kbase_Cleaner.py   
 ```
 
 AGORA2 models are not reconstructed. They are downloaded from VMH, and special characters that break SBML parsing are fixed:
 
 ```bash
-bash Agora_check_and_fix_sbml.sh   # TODO: input/output arguments
+bash Agora_check_and_fix_sbml.sh   
 ```
 
 At the end of this step there should be four SBML models per species, one per tool.
@@ -156,8 +155,7 @@ At the end of this step there should be four SBML models per species, one per to
 The four models of each species are merged into one supermodel. GEMsembler maps all gene IDs to the genome FASTA so that genes from different tools can be compared:
 
 ```bash
-python Translated_models_code.py   # TODO: describe what this step does
-python Supermodel_Generator.py     # TODO: arguments
+python Supermodel_Generator.py     
 ```
 
 A supermodel records, for every reaction, metabolite and gene, which tools contain it.
@@ -175,21 +173,13 @@ Run `SUBmodel_extractor.ipynb`. It extracts the following models from each super
 
 It also extracts the standardized per-tool models. As you move from Core4 to Assembly, the number of genes, reactions and metabolites grows. Confidence goes down, but coverage goes up.
 
-A quick way to inspect any of the extracted models:
-
-```python
-import cobra
-
-model = cobra.io.read_sbml_model('B_uniformis_core3.xml')   # example file name
-len(model.genes), len(model.reactions), len(model.metabolites)
-```
 
 ### Step 4: Standardize the biomass and test for growth
 
 Each tool writes its own biomass reaction, so the models cannot be compared directly. `biomass_changer.ipynb` replaces it with one curated biomass reaction taken from `final_biomass_as_model.xml`. Growth is then tested with flux balance analysis:
 
 ```bash
-python growth_full_flux_analysis.py   # TODO: arguments
+python growth_full_flux_analysis.py  
 ```
 
 For a single model, the core of this test is:
@@ -199,13 +189,8 @@ solution = model.optimize()
 solution.objective_value   # biomass flux; > 0 means the model can grow
 ```
 
-The result shows which biomass precursors each model can synthesize. Stricter consensus levels (Core4) miss more precursors than the broader Assembly models. CarveMe models produce as many precursors as the consensus models, or more.
+The result shows which biomass precursors each model can synthesize. Stricter consensus levels (Core4) miss more precursors than the broader Assembly models. 
 
-### Step 5: Compare models with PCA
-
-The notebooks in `PCA_analysis/` run a PCA on the gene, reaction and metabolite content of all models. This shows whether models cluster by **species** or by **reconstruction tool**. Distant species separate by species. Closely related *Bacteroides* species cluster by tool, which means the tool bias is larger than the biological difference.
-
----
 
 # Part 2: Condition-specific subnetworks
 
@@ -236,7 +221,7 @@ Each precursor of the biomass reaction is tested on its own as an objective. The
 3_Biomass/3_2_Bar_plot_for_biomass.ipynb
 ```
 
-FBA is run with biomass as the objective for every model. Only the curated model grows. Its growth rate is unrealistically high, which suggests the biomass composition or uptake bounds need further refinement.
+FBA is run with biomass as the objective for every model. Only the curated model grows. 
 
 ### Step 4: Explore the transcriptomic data
 
@@ -248,11 +233,6 @@ FBA is run with biomass as the objective for every model. Only the curated model
 
 `4_1` loads the log₂(TPM + 1) data and keeps only genes that are also in the model (for *B. uniformis*, 3782 genes reduce to 623). `4_2` produces a Spearman correlation matrix, a PCA of the samples, and mean–variance plots. `4_3` compares monoculture against each co-culture (adjusted p < 0.05, |log₂FC| > 1).
 
-To read the results:
-
-* Replicates correlate strongly (ρ ≈ 0.85–1.0).
-* The response to *P. vulgatus* is small, the response to *B. thetaiotaomicron* is moderate, and the response in Com21 is extensive.
-* On PC1 (59.3 % of variance), Com21 samples separate clearly from all other conditions.
 
 ### Step 5: Discretize expression and run CORNETO iMAT
 
@@ -273,9 +253,7 @@ These states are passed to the multi-sample iMAT in CORNETO, run with two regula
 * **λ = 0**: every condition is fitted on its own, which gives condition-specific subnetworks with large differences between conditions.
 * **λ = 1**: network size is penalized across all conditions, which highlights a conserved core metabolism shared by all conditions.
 
-The notebook exports the fluxes, scales them to [−1, 1], and plots a clustered heatmap of the 50 most variable reactions together with a PCA of the conditions.
-
-> TODO: confirm that iMAT runs in this notebook. If it runs in a separate script, add it here.
+The notebook exports the fluxes, scales them to [−1, 1], and plots a clustered heatmap of the 50 most variable reactions together with a PCA of the conditions. 
 
 ---
 
@@ -288,8 +266,6 @@ The notebook exports the fluxes, scales them to [−1, 1], and plots a clustered
 * The automatically built models were not manually curated and should be treated as drafts.
 
 ## Citation
-
-If you use this workflow, please cite the tools it builds on:
 
 * **AGORA2**: Heinken et al. (2023) *Nat Biotechnol* 41, 1320–1331. https://doi.org/10.1038/s41587-022-01628-0
 * **KBase**: Arkin et al. (2018) *Nat Biotechnol* 36, 566–569. https://doi.org/10.1038/nbt.4163
