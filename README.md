@@ -1,8 +1,12 @@
-# GEMS-and-Condition-Specific-Subnetworks
-Python/Snakemake workflow for building genome-scale metabolic models (GEMs) of 21 gut bacteria (Com21) with AGORA2, KBase, gapseq and CarveMe, merged into consensus supermodels via GEMsembler. Includes FBA, precursor producibility, PCA, and transcriptomics-driven condition-specific subnetworks for B. uniformis and P. vulgatus using CORNETO iMAT.
-
-
 # Genome-Scale Metabolic Models & Condition-Specific Subnetworks of Gut Bacteria
+
+Genome-scale metabolic models (GEMs) predict what a microbe can make and consume from its genome alone. Different reconstruction tools, however, produce quite different models for the same organism. This repository contains the workflow developed during a practical course in the Zimmermann-Kogadeeva group (EMBL, 2025) to:
+
+1. build GEMs for 21 gut bacteria of the synthetic Com21 community with four tools (**AGORA2**, **KBase**, **gapseq**, **CarveMe**),
+2. merge them into consensus **supermodels** with **GEMsembler** and extract submodels at different confidence levels,
+3. test the models for growth and biomass precursor production, and
+4. integrate transcriptomic data with **CORNETO iMAT** to build condition-specific subnetworks of *Bacteroides uniformis* and *Phocaeicola vulgatus* grown alone, in co-culture, and in the Com21 community.
+
 
 > Practical course, Zimmermann-Kogadeeva Group, EMBL Heidelberg (05.05.–18.08.2025)
 > Author: Valentin Rebernig · Supervisor: Dr. Maria Zimmermann-Kogadeeva
@@ -59,17 +63,14 @@ subgraph P2[Part 2 – Condition-specific subnetworks]
 ```
 .
 ├── 01_GEM_reconstruction/
-│   ├── Snakefile_gapseq                    # TODO: re-add (see Step 1a)
-│   ├── Snakefile_carveme_NoGap_fill        # TODO: re-add (see Step 1b)
-│   ├── Kbase_Cleaner.py                    # removes artificial KBase metabolites
-│   ├── Agora_check_and_fix_sbml.sh         # fixes special characters in AGORA2 SBML files
-│   ├── Translated_models_code.py           # TODO: describe
-│   ├── Supermodel_Generator.py             # GEMsembler supermodel integration
-│   ├── SUBmodel_extractor.ipynb            # extracts Core4–Assembly submodels
-│   ├── biomass_changer.ipynb               # inserts standardized biomass reaction
-│   ├── growth_full_flux_analysis.py        # FBA / growth tests
-│   ├── PCA_analysis/                       # PCA of model composition
-│   └── lib/                                # helper functions
+│   ├── Snakefile_gapseq                    # missing
+│   ├── Snakefile_carveme_NoGap_fill        # missing
+│   ├── Kbase_Cleaner.py                    
+│   ├── Agora_check_and_fix_sbml.sh         
+│   ├── Supermodel_Generator.py             
+│   ├── SUBmodel_extractor.ipynb            
+│   ├── biomass_changer.ipynb               
+│   ├── growth_full_flux_analysis.py        
 │
 ├── 02_Context_specific_subnetworks/
 │   ├── 1_Media_and_Biomass_change/
@@ -90,189 +91,210 @@ subgraph P2[Part 2 – Condition-specific subnetworks]
 │   ├── 5_Transcriptomics_integration/
 │   │   ├── 5_1_Buniformis_Expression_Discretization.ipynb
 │   │   ├── 5_1_Pvulgatus_Expression_Discretization.ipynb
-│   │   ├── Functions.py                    # shared helper functions
-│   │   └── lib/
-│   ├── Additional_Analysis/                # exploratory, not required for the main results
-│   └── lib/
-│
-├── environment.yml
+│   │   ├── Functions.py                    
 └── README.md
 ```
 
----
+The following tools need to be installed separately (see their own documentation):
 
-## Requirements
+* [gapseq](https://github.com/jotech/gapseq) and [CarveMe](https://github.com/cdanielmachado/carveme) for reconstruction
+* [GEMsembler](https://github.com/zimmermann-kogadeeva-group/GEMsembler) for supermodels
+* [CORNETO](https://github.com/saezlab/corneto) plus a MILP solver (e.g. Gurobi or HiGHS) for iMAT
+* METAnnotator and FastANI for input preparation
 
-| Tool | Purpose | Version |
-|---|---|---|
-| Python | all analysis | TODO |
-| Snakemake | automation of gapseq / CarveMe / GEMsembler runs | TODO |
-| [gapseq](https://github.com/jotech/gapseq) | bottom-up reconstruction | TODO |
-| [CarveMe](https://github.com/cdanielmachado/carveme) | top-down reconstruction | TODO |
-| [GEMsembler](https://github.com/zimmermann-kogadeeva-group/GEMsembler) | supermodel integration | TODO |
-| [CORNETO](https://github.com/saezlab/corneto) | network inference (iMAT) | TODO |
-| cobrapy | FBA, model handling | TODO |
-| MILP solver (e.g. Gurobi / HiGHS) | required by CORNETO iMAT | TODO |
-| METAnnotator | protein FASTA for CarveMe | TODO |
-| FastANI | selection of replacement strains | TODO |
-| pandas, numpy, scipy, scikit-learn, matplotlib, seaborn | analysis and plotting | TODO |
+KBase is used through its web interface at <https://narrative.kbase.us>.
 
-```bash
-conda env create -f environment.yml
-conda activate gem_workflow
-```
+> **Note:** several notebooks use hardcoded file paths. Adjust them to your folder structure before running.
 
-KBase is used through its web interface (<https://narrative.kbase.us>) and needs no local installation.
+### Input data
 
-> **Note on paths:** several notebooks contain hardcoded file paths. Adjust them to your local directory structure before running.
-
----
-
-## Input data
-
-Raw genomes, reconstructed models and transcriptomic data are **not included** in this repository.
+Genomes, models and expression data are **not** included in the repository. Download or request them first:
 
 | Data | Source |
 |---|---|
-| Genome assemblies (`.fna`) for gapseq and KBase | [NCBI RefSeq](https://www.ncbi.nlm.nih.gov/refseq/) |
-| Protein sequences (`.faa`) for CarveMe | generated from RefSeq assemblies with METAnnotator |
-| AGORA2 models (SBML) | [VMH – AGORA2 v2.01](https://www.vmh.life/files/reconstructions/AGORA2/version2.01/sbml_files_fixed/zipped/AGORA2_models/) |
-| AGORA2 genome FASTA files | [VMH downloads](https://www.vmh.life/#downloadview) |
-| Curated Core3 models of *B. uniformis* and *P. vulgatus* | provided by Elena Matveishina (not public) |
-| Normalized transcriptomics, log₂(TPM + 1), grown in mGAM | provided by Juan Escorcia (not public) |
-
-### Species
-
-The 21 species follow the Com21 community (Grießhammer et al., 2023), with *Veillonella parvula* replaced by *Ruminococcus bromii*.
-
-| Species | Strain / RefSeq accession | AGORA2 model | Note |
-|---|---|---|---|
-| *Bacteroides uniformis* | TODO | TODO | |
-| *Phocaeicola vulgatus* | TODO | TODO | |
-| *Clostridium saccharolyticum* | TODO | TODO | no FASTA, no replacement strain found |
-| *Ruminococcus bromii* | TODO | TODO | replaces *V. parvula* |
-| … | | | |
-
-For five AGORA2 strains without an available FASTA file, replacement strains were selected by average nucleotide identity (FastANI). Two of them are below the 95 % ANI threshold. TODO: list them here.
+| Genome assemblies (`.fna`) | [NCBI RefSeq](https://www.ncbi.nlm.nih.gov/refseq/) |
+| Protein sequences (`.faa`) for CarveMe | generated from the assemblies with METAnnotator |
+| AGORA2 models and genome FASTA | [VMH](https://www.vmh.life/#downloadview) |
+| Curated Core3 models of *B. uniformis* and *P. vulgatus* | Elena Matveishina (on request) |
+| RNA-seq, log₂(TPM + 1), grown in mGAM | Juan Escorcia (on request) |
 
 ---
 
-## Part 1 – GEM reconstruction and supermodels
+# Part 1: Building GEMs and supermodels
 
-All scripts are in `01_GEM_reconstruction/`. Run the steps in this order.
+All commands in this part are run from `01_GEM_reconstruction/`.
 
-| Step | Script | Input | Output |
-|---|---|---|---|
-| 1a | `Snakefile_gapseq` | `.fna` genomes | gapseq SBML models |
-| 1b | `Snakefile_carveme_NoGap_fill` | `.faa` proteins | CarveMe SBML models |
-| 1c | KBase web app + `Kbase_Cleaner.py` | `.fna` genomes | cleaned KBase SBML models |
-| 1d | `Agora_check_and_fix_sbml.sh` | AGORA2 SBML from VMH | fixed AGORA2 SBML models |
-| 2 | `Translated_models_code.py` | TODO | TODO |
-| 3 | `Supermodel_Generator.py` | 4 models per species + genome FASTA | GEMsembler supermodels |
-| 4 | `SUBmodel_extractor.ipynb` | supermodels | Core4, Core3, Core2, Assembly and per-tool models |
-| 5 | `biomass_changer.ipynb` | submodels + `final_biomass_as_model.xml` | models with standardized biomass |
-| 6 | `growth_full_flux_analysis.py` | standardized models | FBA growth and precursor synthesis results |
-| 7 | `PCA_analysis/` | all models | PCA of genes, reactions and metabolites |
+### Step 1: Reconstruct draft models with four tools
 
-### Step 1a – gapseq
-
-Automated with Snakemake across all 21 genomes. Equivalent command per genome:
+gapseq and CarveMe are run automatically over all 21 genomes with Snakemake:
 
 ```bash
-gapseq doall genome.fna   # TODO: add the exact options used
+# gapseq: bottom-up reconstruction from nucleotide sequences
+snakemake -s Snakefile_gapseq 
+
+# CarveMe: top-down reconstruction from protein sequences, without gap-filling
+snakemake -s Snakefile_carveme_NoGap_fill 
 ```
 
-### Step 1b – CarveMe (no gap-filling)
 
-Automated with Snakemake across all 21 genomes. Equivalent command per genome:
+KBase models are built manually in a Narrative with three apps: **Batch Create Assembly Set** (v1.2.0), then **Annotate Multiple Microbial Assemblies with RASTtk** (v1.073), then **MS2 – Build Prokaryotic Metabolic Models** (OMEGGA). KBase adds artificial metabolites, which are removed after download:
 
 ```bash
-carve proteins.faa -o model.xml   # TODO: add the exact options used; no -g/--gapfill
+python Kbase_Cleaner.py   # TODO: input/output arguments
 ```
 
-### Step 1c – KBase (manual)
-
-1. Upload the genome `.fna` files to a KBase Narrative.
-2. Run **Batch Create Assembly Set** (v1.2.0).
-3. Run **Annotate Multiple Microbial Assemblies with RASTtk** (v1.073).
-4. Run **MS2 – Build Prokaryotic Metabolic Models** with OMEGGA.
-5. Download the SBML models and remove artificial metabolites:
+AGORA2 models are not reconstructed. They are downloaded from VMH, and special characters that break SBML parsing are fixed:
 
 ```bash
-python Kbase_Cleaner.py   # TODO: arguments
+bash Agora_check_and_fix_sbml.sh   # TODO: input/output arguments
 ```
 
-### Step 1d – AGORA2
+At the end of this step there should be four SBML models per species, one per tool.
+
+### Step 2: Build supermodels with GEMsembler
+
+The four models of each species are merged into one supermodel. GEMsembler maps all gene IDs to the genome FASTA so that genes from different tools can be compared:
 
 ```bash
-bash Agora_check_and_fix_sbml.sh   # TODO: arguments
+python Translated_models_code.py   # TODO: describe what this step does
+python Supermodel_Generator.py     # TODO: arguments
 ```
 
-### Steps 3–4 – Supermodels and confidence levels
+A supermodel records, for every reaction, metabolite and gene, which tools contain it.
 
-`Supermodel_Generator.py` integrates the four reconstructions per species with GEMsembler and remaps all gene IDs to the genome FASTA. `SUBmodel_extractor.ipynb` then extracts:
+### Step 3: Extract submodels at different confidence levels
 
-| Level | Definition |
+Run `SUBmodel_extractor.ipynb`. It extracts the following models from each supermodel:
+
+| Level | Contains features present in |
 |---|---|
-| Core4 | features present in all 4 tools |
-| Core3 | features present in ≥ 3 tools |
-| Core2 | features present in ≥ 2 tools |
-| Assembly | features present in ≥ 1 tool |
+| Core4 | all 4 tools |
+| Core3 | ≥ 3 tools |
+| Core2 | ≥ 2 tools |
+| Assembly | ≥ 1 tool |
+
+It also extracts the standardized per-tool models. As you move from Core4 to Assembly, the number of genes, reactions and metabolites grows. Confidence goes down, but coverage goes up.
+
+A quick way to inspect any of the extracted models:
+
+```python
+import cobra
+
+model = cobra.io.read_sbml_model('B_uniformis_core3.xml')   # example file name
+len(model.genes), len(model.reactions), len(model.metabolites)
+```
+
+### Step 4: Standardize the biomass and test for growth
+
+Each tool writes its own biomass reaction, so the models cannot be compared directly. `biomass_changer.ipynb` replaces it with one curated biomass reaction taken from `final_biomass_as_model.xml`. Growth is then tested with flux balance analysis:
+
+```bash
+python growth_full_flux_analysis.py   # TODO: arguments
+```
+
+For a single model, the core of this test is:
+
+```python
+solution = model.optimize()
+solution.objective_value   # biomass flux; > 0 means the model can grow
+```
+
+The result shows which biomass precursors each model can synthesize. Stricter consensus levels (Core4) miss more precursors than the broader Assembly models. CarveMe models produce as many precursors as the consensus models, or more.
+
+### Step 5: Compare models with PCA
+
+The notebooks in `PCA_analysis/` run a PCA on the gene, reaction and metabolite content of all models. This shows whether models cluster by **species** or by **reconstruction tool**. Distant species separate by species. Closely related *Bacteroides* species cluster by tool, which means the tool bias is larger than the biological difference.
 
 ---
 
-## Part 2 – Condition-specific subnetworks
+# Part 2: Condition-specific subnetworks
 
-All scripts are in `02_Context_specific_subnetworks/`. The folders are numbered in run order, and the notebooks within each folder follow the `<folder>_<step>` numbering.
+The folders in `02_Context_specific_subnetworks/` are numbered in run order. Each step is shown for *B. uniformis*. The *P. vulgatus* notebooks work the same way.
 
-| Step | Notebook | What it does | Output |
-|---|---|---|---|
-| 1_1 | `1_1_Media_generation.ipynb` | defines the medium | `LB_minus_O2_media.csv` |
-| 1_2 | `1_2_biomass_changer.ipynb` | inserts the standardized biomass reaction into the curated Core3 models | standardized models |
-| 2_1 | `2_1_Precursor_Producibility_matrix.ipynb` | tests de novo synthesis of each biomass precursor | producibility matrix |
-| 2_2 | `2_2_Precursor_heatmap.ipynb` | plots the matrix | heatmap |
-| 3_1 | `3_1_Biomass_production.ipynb` | FBA with biomass as the objective | biomass fluxes |
-| 3_2 | `3_2_Bar_plot_for_biomass.ipynb` | plots biomass production per model | bar plot |
-| 4_1 | `4_1_Dataframe_extraction.ipynb` | loads the expression data and filters it to model genes | expression tables |
-| 4_2 | `4_2_<species>_PCA_Blotting.ipynb` | Spearman correlation, PCA, mean–variance plots | figures |
-| 4_3 | `4_3_vulcano_plot.ipynb` | differential expression, monoculture vs. co-culture (adj. p < 0.05, \|log₂FC\| > 1) | volcano plots |
-| 5_1 | `5_1_<species>_Expression_Discretization.ipynb` | averages replicates, discretizes into −1 / 0 / +1 by quantiles, runs CORNETO iMAT with λ = 0 and λ = 1 | flux tables, heatmaps, PCA |
+### Step 1: Define the medium and biomass
 
-Conditions: monoculture, co-culture with *B. thetaiotaomicron*, co-culture with *P. vulgatus* (for *B. uniformis*), and the full Com21 community.
+```text
+1_Media_and_Biomass_change/1_1_Media_generation.ipynb
+1_Media_and_Biomass_change/1_2_biomass_changer.ipynb
+```
 
-**Regularization in iMAT.**
-- **λ = 0** fits each condition independently and gives condition-specific subnetworks.
-- **λ = 1** penalizes network size across conditions and highlights a conserved core metabolism.
+The first notebook writes `LB_minus_O2_media.csv`, which defines which exchange reactions are open. The second inserts the standardized biomass reaction into the curated Core3 models.
 
-`Additional_Analysis/` contains exploratory notebooks that are not needed to reproduce the main results.
+### Step 2: Check which biomass precursors can be produced
+
+```text
+2_Precursor_Producibility/2_1_Precursor_Producibility_matrix.ipynb
+2_Precursor_Producibility/2_2_Precursor_heatmap.ipynb
+```
+
+Each precursor of the biomass reaction is tested on its own as an objective. The heatmap shows producible precursors in green and non-producible ones in light blue. Only the curated model produces all of them, and the Assembly model comes closest.
+
+### Step 3: Test biomass production
+
+```text
+3_Biomass/3_1_Biomass_production.ipynb
+3_Biomass/3_2_Bar_plot_for_biomass.ipynb
+```
+
+FBA is run with biomass as the objective for every model. Only the curated model grows. Its growth rate is unrealistically high, which suggests the biomass composition or uptake bounds need further refinement.
+
+### Step 4: Explore the transcriptomic data
+
+```text
+4_RNA_Preanalysis/4_1_Dataframe_extraction.ipynb
+4_RNA_Preanalysis/4_2_Buniformis_PCA_Blotting.ipynb
+4_RNA_Preanalysis/4_3_vulcano_plot.ipynb
+```
+
+`4_1` loads the log₂(TPM + 1) data and keeps only genes that are also in the model (for *B. uniformis*, 3782 genes reduce to 623). `4_2` produces a Spearman correlation matrix, a PCA of the samples, and mean–variance plots. `4_3` compares monoculture against each co-culture (adjusted p < 0.05, |log₂FC| > 1).
+
+To read the results:
+
+* Replicates correlate strongly (ρ ≈ 0.85–1.0).
+* The response to *P. vulgatus* is small, the response to *B. thetaiotaomicron* is moderate, and the response in Com21 is extensive.
+* On PC1 (59.3 % of variance), Com21 samples separate clearly from all other conditions.
+
+### Step 5: Discretize expression and run CORNETO iMAT
+
+```text
+5_Transcriptomics_integration/5_1_Buniformis_Expression_Discretization.ipynb
+```
+
+Helper functions are in `Functions.py`. Expression is first averaged across replicates and then split by quantiles into three states:
+
+| State | Meaning |
+|---|---|
+| −1 | low expression, so the reaction is preferably inactive |
+| 0 | medium expression, no preference |
+| +1 | high expression, so the reaction is preferably active |
+
+These states are passed to the multi-sample iMAT in CORNETO, run with two regularization settings:
+
+* **λ = 0**: every condition is fitted on its own, which gives condition-specific subnetworks with large differences between conditions.
+* **λ = 1**: network size is penalized across all conditions, which highlights a conserved core metabolism shared by all conditions.
+
+The notebook exports the fluxes, scales them to [−1, 1], and plots a clustered heatmap of the 50 most variable reactions together with a PCA of the conditions.
+
+> TODO: confirm that iMAT runs in this notebook. If it runs in a separate script, add it here.
 
 ---
 
-## Known issues and manual interventions
+## Known issues
 
-- **KBase gene IDs** are not fully compatible with GEMsembler, so gene-level information from KBase models is largely lost in the supermodels.
-- **KBase models of *C. saccharolyticum* and *E. bolteae*** failed to integrate and were rebuilt with an older version of the ModelSEED app in KBase.
-- ***C. saccharolyticum*** has no AGORA2 genome FASTA and no suitable replacement strain, so its AGORA2 genes could not be mapped.
-- **AGORA2 gene names for *S. salivarius* and *E. lenta*** do not match their FASTA files, so few or no genes were mapped.
-- **Uncurated models** (all tools and confidence levels) do not produce biomass with the standardized biomass reaction. Only the curated *B. uniformis* model grows, and its growth rate is unrealistically high.
-- The automatically generated models were **not manually curated** (mass and charge balance, transport reactions), so treat them as drafts.
+* KBase gene IDs are not fully compatible with GEMsembler, so KBase gene information is largely lost.
+* The KBase models of *C. saccharolyticum* and *E. bolteae* were rebuilt with an older ModelSEED app because the newer ones failed to integrate.
+* *C. saccharolyticum* has no AGORA2 FASTA and no replacement strain. Five other strains were replaced using FastANI, and two of those are below 95 % ANI.
+* AGORA2 gene names for *S. salivarius* and *E. lenta* do not match their FASTA files.
+* The automatically built models were not manually curated and should be treated as drafts.
 
----
+## Citation
 
-## References
+If you use this workflow, please cite the tools it builds on:
 
-- Arkin, A.P. et al. (2018) KBase. *Nature Biotechnology* 36, 566–569. https://doi.org/10.1038/nbt.4163
-- Grießhammer, A. et al. (2023) Non-antibiotic drugs break colonization resistance against pathogenic Gammaproteobacteria. *bioRxiv*. https://doi.org/10.1101/2023.11.06.564936
-- Heinken, A. et al. (2023) AGORA2. *Nature Biotechnology* 41, 1320–1331. https://doi.org/10.1038/s41587-022-01628-0
-- Machado, D. et al. (2018) CarveMe. *Nucleic Acids Research* 46, 7542–7553. https://doi.org/10.1093/nar/gky537
-- Matveishina, E.K. et al. GEMsembler: cross-tool structural comparison and ensemble modeling improve metabolic model performance.
-- Rodriguez-Mier, P. et al. (2024) CORNETO: Unified knowledge-driven network inference from omics data. *bioRxiv*. https://doi.org/10.1101/2024.10.26.620390
-- Zimmermann, J., Kaleta, C. & Waschina, S. (2021) gapseq. *Genome Biology* 22, 81. https://doi.org/10.1186/s13059-021-02295-1
-
-## Acknowledgements
-
-Thanks to Dr. Maria Zimmermann-Kogadeeva for supervision, Elena Matveishina for the curated Core3 models and GEMsembler, and Juan Escorcia for the normalized transcriptomic data.
-
-## License
-
-TODO: choose a license (e.g. MIT).
+* **AGORA2**: Heinken et al. (2023) *Nat Biotechnol* 41, 1320–1331. https://doi.org/10.1038/s41587-022-01628-0
+* **KBase**: Arkin et al. (2018) *Nat Biotechnol* 36, 566–569. https://doi.org/10.1038/nbt.4163
+* **gapseq**: Zimmermann, Kaleta & Waschina (2021) *Genome Biol* 22, 81. https://doi.org/10.1186/s13059-021-02295-1
+* **CarveMe**: Machado et al. (2018) *Nucleic Acids Res* 46, 7542–7553. https://doi.org/10.1093/nar/gky537
+* **GEMsembler**: Matveishina et al. GEMsembler: cross-tool structural comparison and ensemble modeling improve metabolic model performance.
+* **CORNETO**: Rodriguez-Mier et al. (2024) *bioRxiv*. https://doi.org/10.1101/2024.10.26.620390
+* **Com21**: Grießhammer et al. (2023) *bioRxiv*. https://doi.org/10.1101/2023.11.06.564936
